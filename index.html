@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест на уровень итальянского языка</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇮🇹</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">🇮🇹 Тест на уровень итальянского</h1>
+            <p class="subtitle">Проверьте свои знания грамматики, лексики и полезных фраз</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Start Screen -->
+            <section id="start-screen" class="screen active">
+                <div class="card">
+                    <div class="card-icon">📝</div>
+                    <h2>Готовы проверить свой итальянский?</h2>
+                    <p>Тест состоит из 40 вопросов, охватывающих грамматику, лексику и практические фразы.</p>
+                    <p>Уровень сложности варьируется от A1 до B2.</p>
+                    <ul class="instructions">
+                        <li>40 вопросов с вариантами ответов</li>
+                        <li>Случайный порядок вопросов и вариантов</li>
+                        <li>Объяснение после каждого ответа</li>
+                        <li>Результат с оценкой уровня</li>
+                    </ul>
+                    <button id="start-btn" class="btn-primary" aria-label="Начать тест">
+                        Начать тест
+                    </button>
+                </div>
+            </section>
+
+            <!-- Quiz Screen -->
+            <section id="quiz-screen" class="screen">
+                <div class="quiz-header">
+                    <div class="quiz-stats">
+                        <div class="progress-container">
+                            <span class="progress-text">Вопрос <span id="current-question">1</span> из 40</span>
+                            <div class="progress-bar">
+                                <div id="progress-fill" class="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="score">Счёт: <span id="score">0</span>/40</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 id="question-text" class="question-text"></h2>
+                    
+                    <div id="options-container" class="options-container">
+                        <!-- Options will be inserted here by JavaScript -->
+                    </div>
+
+                    <div class="quiz-navigation">
+                        <button id="next-btn" class="btn-secondary" disabled aria-label="Следующий вопрос">
+                            Далее →
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Result Screen -->
+            <section id="result-screen" class="screen">
+                <div class="card">
+                    <div id="result-icon" class="card-icon">🏆</div>
+                    <h2>Тест завершён!</h2>
+                    
+                    <div class="result-stats">
+                        <div class="result-circle">
+                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                <circle class="result-circle-bg" cx="60" cy="60" r="54" stroke-width="12"></circle>
+                                <circle id="result-circle" class="result-circle-progress" cx="60" cy="60" r="54" stroke-width="12" 
+                                        stroke-dasharray="339.292" stroke-dashoffset="339.292"></circle>
+                            </svg>
+                            <div class="result-percent">
+                                <span id="percent">0</span>%
+                            </div>
+                        </div>
+                        
+                        <div class="result-details">
+                            <p>Правильных ответов: <strong id="final-score">0</strong> из 40</p>
+                            <p>Ваш уровень: <strong id="level-text" class="level-text">База</strong></p>
+                            <p id="level-description" class="level-description"></p>
+                        </div>
+                    </div>
+
+                    <div id="explanation-summary" class="explanation-summary">
+                        <!-- Explanation summary will be inserted here -->
+                    </div>
+
+                    <div class="result-actions">
+                        <button id="restart-btn" class="btn-primary" aria-label="Пройти тест заново">
+                            Пройти заново
+                        </button>
+                    </div>
+                </div>
+                
+                <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Создано с ❤️ для изучающих итальянский язык</p>
+        </footer>
+    </div>
+
+    <script src="assets/app.js"></script>
+</body>
+</html>
