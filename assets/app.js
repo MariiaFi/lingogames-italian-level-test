@@ -420,4 +420,499 @@ const quizQuestions = [
             "Piacere",
             "Grazie"
         ],
-        correctIndex
+        correctIndex: 2,
+        explanation: "Правильно! 'Piacere' означает 'приятно познакомиться'. 'Arrivederci' — до свидания, 'Buongiorno' — добрый день, 'Grazie' — спасибо."
+    },
+    {
+        id: 36,
+        question: "Выберите правильную форму: Tu ___ bella. (Ты красивая.)",
+        options: [
+            "sei",
+            "è",
+            "sono",
+            "siamo"
+        ],
+        correctIndex: 0,
+        explanation: "Правильно! Глагол 'essere' (быть) во втором лице единственного числа — 'sei'. Согласование: 'bella' (женский род)."
+    },
+    {
+        id: 37,
+        question: "Как будет 'воздух' по-итальянски?",
+        options: [
+            "Acqua",
+            "Terra",
+            "Aria",
+            "Fuoco"
+        ],
+        correctIndex: 2,
+        explanation: "Правильно! 'Aria' означает воздух. 'Acqua' — вода, 'Terra' — земля, 'Fuoco' — огонь."
+    },
+    {
+        id: 38,
+        question: "Что означает 'camera' в итальянском?",
+        options: [
+            "Фотоаппарат",
+            "Комната",
+            "Камера (тюремная)",
+            "Телевизор"
+        ],
+        correctIndex: 1,
+        explanation: "Правильно! 'Camera' в итальянском означает комната. Это false friend — в английском 'camera' означает фотоаппарат."
+    },
+    {
+        id: 39,
+        question: "Как сказать 'я должен'?",
+        options: [
+            "Io posso",
+            "Io voglio",
+            "Io devo",
+            "Io so"
+        ],
+        correctIndex: 2,
+        explanation: "Правильно! 'Devo' — форма глагола 'dovere' (должен) для первого лица. 'Posso' — могу, 'Voglio' — хочу, 'So' — знаю."
+    },
+    {
+        id: 40,
+        question: "Выберите правильный вариант: Questo è ___ libro interessante. (Это интересная книга.)",
+        options: [
+            "un",
+            "uno",
+            "una",
+            "un'"
+        ],
+        correctIndex: 0,
+        explanation: "Правильно! 'Un libro' — неопределённый артикль мужского рода. 'Libro' — мужского рода, начинается с согласной."
+    }
+];
+
+// Game State
+let currentQuestionIndex = 0;
+let score = 0;
+let shuffledQuestions = [];
+let userAnswers = [];
+
+// DOM Elements
+const startScreen = document.getElementById('start-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultScreen = document.getElementById('result-screen');
+const startBtn = document.getElementById('start-btn');
+const nextBtn = document.getElementById('next-btn');
+const restartBtn = document.getElementById('restart-btn');
+const questionText = document.getElementById('question-text');
+const optionsContainer = document.getElementById('options-container');
+const currentQuestionElement = document.getElementById('current-question');
+const scoreElement = document.getElementById('score');
+const progressFill = document.getElementById('progress-fill');
+const finalScoreElement = document.getElementById('final-score');
+const percentElement = document.getElementById('percent');
+const levelTextElement = document.getElementById('level-text');
+const levelDescriptionElement = document.getElementById('level-description');
+const explanationSummaryElement = document.getElementById('explanation-summary');
+const resultCircle = document.getElementById('result-circle');
+const confettiCanvas = document.getElementById('confetti-canvas');
+
+// Utility Functions
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+function shuffleOptions(question) {
+    const options = [...question.options];
+    const correctAnswer = options[question.correctIndex];
+    
+    // Shuffle all options
+    for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+    }
+    
+    // Find new index of correct answer
+    const newCorrectIndex = options.indexOf(correctAnswer);
+    
+    return {
+        shuffledOptions: options,
+        correctIndex: newCorrectIndex
+    };
+}
+
+// Game Functions
+function initGame() {
+    // Reset state
+    currentQuestionIndex = 0;
+    score = 0;
+    userAnswers = [];
+    
+    // Shuffle questions
+    shuffledQuestions = shuffleArray(quizQuestions).map(question => {
+        const shuffled = shuffleOptions(question);
+        return {
+            ...question,
+            options: shuffled.shuffledOptions,
+            correctIndex: shuffled.correctIndex
+        };
+    });
+    
+    // Update UI
+    updateScore();
+    showQuestion();
+    updateProgress();
+    
+    // Switch to quiz screen
+    switchScreen('quiz');
+}
+
+function showQuestion() {
+    if (currentQuestionIndex >= shuffledQuestions.length) {
+        showResults();
+        return;
+    }
+    
+    const question = shuffledQuestions[currentQuestionIndex];
+    
+    // Update question text
+    questionText.textContent = question.question;
+    
+    // Update question counter
+    currentQuestionElement.textContent = currentQuestionIndex + 1;
+    
+    // Clear previous options
+    optionsContainer.innerHTML = '';
+    
+    // Create option elements
+    const labels = ['A', 'B', 'C', 'D'];
+    question.options.forEach((option, index) => {
+        const optionElement = document.createElement('button');
+        optionElement.className = 'option';
+        optionElement.setAttribute('data-index', index);
+        optionElement.setAttribute('role', 'radio');
+        optionElement.setAttribute('aria-checked', 'false');
+        optionElement.tabIndex = 0;
+        
+        optionElement.innerHTML = `
+            <span class="option-label">${labels[index]}</span>
+            <span class="option-text">${option}</span>
+        `;
+        
+        optionElement.addEventListener('click', () => selectOption(index));
+        optionElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectOption(index);
+            }
+        });
+        
+        optionsContainer.appendChild(optionElement);
+    });
+    
+    // Reset next button
+    nextBtn.disabled = true;
+    nextBtn.textContent = 'Далее →';
+    
+    // Clear any feedback
+    const existingFeedback = document.querySelector('.feedback');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+}
+
+function selectOption(selectedIndex) {
+    const question = shuffledQuestions[currentQuestionIndex];
+    const optionElements = document.querySelectorAll('.option');
+    
+    // Disable all options
+    optionElements.forEach(el => {
+        el.disabled = true;
+        el.setAttribute('aria-checked', 'false');
+    });
+    
+    // Mark selected option
+    const selectedElement = optionElements[selectedIndex];
+    selectedElement.classList.add('selected');
+    selectedElement.setAttribute('aria-checked', 'true');
+    
+    // Check if correct
+    const isCorrect = selectedIndex === question.correctIndex;
+    
+    if (isCorrect) {
+        score++;
+        updateScore();
+        selectedElement.classList.add('correct');
+    } else {
+        selectedElement.classList.add('incorrect');
+        
+        // Highlight correct answer
+        const correctElement = optionElements[question.correctIndex];
+        correctElement.classList.add('correct');
+    }
+    
+    // Store user answer for summary
+    userAnswers.push({
+        question: question.question,
+        userAnswer: question.options[selectedIndex],
+        correctAnswer: question.options[question.correctIndex],
+        isCorrect,
+        explanation: question.explanation
+    });
+    
+    // Show feedback
+    showFeedback(isCorrect, question.explanation);
+    
+    // Enable next button
+    nextBtn.disabled = false;
+}
+
+function showFeedback(isCorrect, explanation) {
+    const feedback = document.createElement('div');
+    feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+    feedback.innerHTML = `
+        <div class="feedback-title">
+            ${isCorrect ? 'Правильно!' : 'Неправильно!'}
+        </div>
+        <div class="feedback-explanation">
+            ${explanation}
+        </div>
+    `;
+    
+    // Insert after options container
+    optionsContainer.parentNode.insertBefore(feedback, optionsContainer.nextSibling);
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    
+    if (currentQuestionIndex < shuffledQuestions.length) {
+        showQuestion();
+        updateProgress();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    const percentage = Math.round((score / quizQuestions.length) * 100);
+    
+    // Update result elements
+    finalScoreElement.textContent = score;
+    percentElement.textContent = percentage;
+    
+    // Determine level
+    let level, description;
+    if (percentage >= 90) {
+        level = "Эксперт";
+        description = "Отличное знание итальянского! Вы можете свободно общаться на большинство тем.";
+    } else if (percentage >= 70) {
+        level = "Продвинутый";
+        description = "Хорошие знания! Некоторые детали можно улучшить, но в целом вы уверенно владеете языком.";
+    } else if (percentage >= 50) {
+        level = "Средний";
+        description = "Неплохой результат! База есть, но нужно больше практики и изучения грамматики.";
+    } else if (percentage >= 30) {
+        level = "Начинающий";
+        description = "Основы усвоены. Продолжайте учить новые слова и практиковать грамматику.";
+    } else {
+        level = "Начальный";
+        description = "Вы только начинаете свой путь в изучении итальянского. Не сдавайтесь!";
+    }
+    
+    levelTextElement.textContent = level;
+    levelDescriptionElement.textContent = description;
+    
+    // Animate progress circle
+    const circumference = 2 * Math.PI * 54;
+    const offset = circumference - (percentage / 100) * circumference;
+    resultCircle.style.strokeDashoffset = offset;
+    
+    // Show explanation summary
+    showExplanationSummary();
+    
+    // Switch to result screen
+    switchScreen('result');
+    
+    // Trigger confetti if score is high
+    if (percentage >= 80) {
+        triggerConfetti();
+    }
+}
+
+function showExplanationSummary() {
+    explanationSummaryElement.innerHTML = '';
+    
+    // Show only incorrect answers
+    const incorrectAnswers = userAnswers.filter(answer => !answer.isCorrect);
+    
+    if (incorrectAnswers.length === 0) {
+        const message = document.createElement('p');
+        message.textContent = 'Все ваши ответы были правильными! Отличный результат!';
+        explanationSummaryElement.appendChild(message);
+        return;
+    }
+    
+    const title = document.createElement('h3');
+    title.textContent = 'Ответы, которые стоит повторить:';
+    explanationSummaryElement.appendChild(title);
+    
+    incorrectAnswers.forEach((answer, index) => {
+        const item = document.createElement('div');
+        item.className = 'summary-item';
+        item.innerHTML = `
+            <div class="summary-question">${index + 1}. ${answer.question}</div>
+            <div class="summary-explanation">Ваш ответ: ${answer.userAnswer}<br>
+            Правильный ответ: ${answer.correctAnswer}<br>
+            ${answer.explanation}</div>
+        `;
+        explanationSummaryElement.appendChild(item);
+    });
+}
+
+function updateProgress() {
+    const progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+    progressFill.style.width = `${progress}%`;
+}
+
+function updateScore() {
+    scoreElement.textContent = score;
+}
+
+function switchScreen(screenName) {
+    // Hide all screens
+    startScreen.classList.remove('active');
+    quizScreen.classList.remove('active');
+    resultScreen.classList.remove('active');
+    
+    // Show requested screen
+    if (screenName === 'start') {
+        startScreen.classList.add('active');
+    } else if (screenName === 'quiz') {
+        quizScreen.classList.add('active');
+        // Focus on first option for accessibility
+        setTimeout(() => {
+            const firstOption = document.querySelector('.option');
+            if (firstOption) firstOption.focus();
+        }, 100);
+    } else if (screenName === 'result') {
+        resultScreen.classList.add('active');
+        // Focus on restart button for accessibility
+        setTimeout(() => {
+            restartBtn.focus();
+        }, 100);
+    }
+}
+
+// Confetti Animation
+function triggerConfetti() {
+    const ctx = confettiCanvas.getContext('2d');
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    
+    const particles = [];
+    const particleCount = 150;
+    
+    // Create particles
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * confettiCanvas.width,
+            y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+            size: Math.random() * 10 + 5,
+            speedX: Math.random() * 3 - 1.5,
+            speedY: Math.random() * 3 + 2,
+            color: `hsl(${Math.random() * 360}, 100%, 60%)`,
+            shape: Math.random() > 0.5 ? 'circle' : 'rect'
+        });
+    }
+    
+    // Animation function
+    function animateConfetti() {
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        
+        let particlesAlive = 0;
+        
+        particles.forEach(particle => {
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            
+            // Add gravity
+            particle.speedY += 0.05;
+            
+            // Draw particle
+            ctx.fillStyle = particle.color;
+            
+            if (particle.shape === 'circle') {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillRect(particle.x, particle.y, particle.size, particle.size * 1.5);
+            }
+            
+            // Rotate rectangular particles
+            if (particle.shape === 'rect') {
+                ctx.save();
+                ctx.translate(particle.x, particle.y);
+                ctx.rotate(particle.y * 0.01);
+                ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size * 1.5);
+                ctx.restore();
+            }
+            
+            // Check if particle is still visible
+            if (particle.y < confettiCanvas.height) {
+                particlesAlive++;
+            }
+        });
+        
+        if (particlesAlive > 0) {
+            requestAnimationFrame(animateConfetti);
+        } else {
+            // Clear canvas after animation
+            setTimeout(() => {
+                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            }, 1000);
+        }
+    }
+    
+    // Start animation
+    animateConfetti();
+}
+
+// Event Listeners
+startBtn.addEventListener('click', initGame);
+nextBtn.addEventListener('click', nextQuestion);
+restartBtn.addEventListener('click', () => {
+    initGame();
+});
+
+// Keyboard Navigation for Quiz
+document.addEventListener('keydown', (e) => {
+    const activeScreen = document.querySelector('.screen.active');
+    
+    if (activeScreen === quizScreen && !nextBtn.disabled) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            nextQuestion();
+        }
+    }
+    
+    // Number keys 1-4 for answer selection
+    if (activeScreen === quizScreen && e.key >= '1' && e.key <= '4') {
+        const index = parseInt(e.key) - 1;
+        const option = document.querySelectorAll('.option')[index];
+        if (option && !option.disabled) {
+            option.click();
+        }
+    }
+});
+
+// Handle window resize
+window.addEventListener('resize', () => {
+    if (confettiCanvas) {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+    }
+});
+
+// Initialize
+switchScreen('start');
